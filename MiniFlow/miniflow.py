@@ -1,77 +1,61 @@
 """
-Write the Linear#forward method below!
+Modify Linear#forward so that it linearly transforms
+input matrices, weights matrices and a bias vector to
+an output.
 """
+
 import numpy as np
 
-class Node:
+
+class Node(object):
     def __init__(self, inbound_nodes=[]):
-        # Nodes from which this Node receives values
         self.inbound_nodes = inbound_nodes
-        # Nodes to which this Node passes values
-        self.outbound_nodes = []
-        # A calculated value
         self.value = None
-        # Add this node as an outbound node on its inputs.
-        for n in self.inbound_nodes:
-            n.outbound_nodes.append(self)
+        self.outbound_nodes = []
+        for node in inbound_nodes:
+            node.outbound_nodes.append(self)
 
-    # These will be implemented in a subclass.
-    def forward(self):
-        """
-        Forward propagation.
-
-        Compute the output value based on `inbound_nodes` and
-        store the result in self.value.
-        """
-        raise NotImplemented
+    def forward():
+        raise NotImplementedError
 
 
 class Input(Node):
+    """
+    While it may be strange to consider an input a node when
+    an input is only an individual node in a node, for the sake
+    of simpler code we'll still use Node as the base class.
+
+    Think of Input as collating many individual input nodes into
+    a Node.
+    """
     def __init__(self):
-        # An Input Node has no inbound nodes,
+        # An Input node has no inbound nodes,
         # so no need to pass anything to the Node instantiator
         Node.__init__(self)
 
-        # NOTE: Input Node is the only Node where the value
-        # may be passed as an argument to forward().
-        #
-        # All other Node implementations should get the value
-        # of the previous nodes from self.inbound_nodes
-        #
-        # Example:
-        # val0 = self.inbound_nodes[0].value
-    def forward(self, value=None):
-        # Overwrite the value if one is passed in.
-        if value is not None:
-            self.value = value
+    def forward(self):
+        # Do nothing because nothing is calculated.
+        pass
 
 
 class Linear(Node):
-    def __init__(self, inputs, weights, bias):
-        Node.__init__(self, [inputs, weights, bias])
-
-        # NOTE: The weights and bias properties here are not
-        # numbers, but rather references to other nodes.
-        # The weight and bias values are stored within the
-        # respective nodes.
-
-    # feed_dict = {x: 4, y: 5, z: 10}
-
-    # self.value = 0;
-    # for singleValue in self.inbound_neurons:
-    #     self.value += singleValue.value
+    def __init__(self, X, W, b):
+        # Notice the ordering of the input nodes passed to the
+        # Node constructor.
+        Node.__init__(self, [X, W, b])
 
     def forward(self):
         """
-        Set self.value to the value of the linear function output.
+        Set the value of this node to the linear transform output.
 
         Your code goes here!
         """
-        inputs = np.array(self.inbound_nodes[0].value)
-        weights = np.array(self.inbound_nodes[1].value)
+        inputs = self.inbound_nodes[0].value
+        weights = self.inbound_nodes[1].value
         bias  = self.inbound_nodes[2].value
-        self.value = bias
-        self.value += inputs.dot(weights)
+
+
+        self.value = inputs.dot(weights) + bias
 
 
 def topological_sort(feed_dict):
@@ -118,14 +102,14 @@ def topological_sort(feed_dict):
 
 def forward_pass(output_node, sorted_nodes):
     """
-    Performs a forward pass through a list of sorted nodes.
+    Performs a forward pass through a list of sorted Nodes.
 
     Arguments:
 
-        `output_node`: A node in the graph, should be the output node (have no outgoing edges).
-        `sorted_nodes`: A topologically sorted list of nodes.
+        `output_node`: A Node in the graph, should be the output node (have no outgoing edges).
+        `sorted_nodes`: a topologically sorted list of nodes.
 
-    Returns the output Node's value
+    Returns the output node's value
     """
 
     for n in sorted_nodes:
