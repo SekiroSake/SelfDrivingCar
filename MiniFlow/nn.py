@@ -1,25 +1,20 @@
 """
-This script builds and runs a graph with miniflow.
+No need to change anything here!
 
-There is no need to change anything to solve this quiz!
-
-However, feel free to play with the network! Can you also
-build a network that solves the equation below?
-
-(x + y) + y
+If all goes well, this should work after you
+modify the Add class in miniflow.py.
 """
 
 from miniflow import *
 
-x, y = Input(), Input()
+x, y, z = Input(), Input(), Input()
 
-f = Add(x, y)
+f = Add(x, y, z)
 
-feed_dict = {x: 10, y: 5}
+feed_dict = {x: 4, y: 5, z: 10}
 
-sorted_neurons = topological_sort(feed_dict)
-output = forward_pass(f, sorted_neurons)
+graph = topological_sort(feed_dict)
+output = forward_pass(f, graph)
 
-# NOTE: because topological_sort set the values for the `Input` neurons we could also access
-# the value for x with x.value (same goes for y).
-print("{} + {} = {} (according to miniflow)".format(feed_dict[x], feed_dict[y], output))
+# should output 19
+print("{} + {} + {} = {} (according to miniflow)".format(feed_dict[x], feed_dict[y], feed_dict[z], output))
