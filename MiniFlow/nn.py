@@ -1,20 +1,23 @@
 """
-No need to change anything here!
+NOTE: Here we're using an Input node for more than a scalar.
+In the case of weights and inputs the value of the Input node is
+actually a python list!
 
-If all goes well, this should work after you
-modify the Add class in miniflow.py.
+In general, there's no restriction on the values that can be passed to an Input node.
 """
-
 from miniflow import *
 
-x, y, z = Input(), Input(), Input()
+inputs, weights, bias = Input(), Input(), Input()
 
-f = Add(x, y, z)
+f = Linear(inputs, weights, bias)
 
-feed_dict = {x: 4, y: 5, z: 10}
+feed_dict = {
+    inputs: [6, 14, 3],
+    weights: [0.5, 0.25, 1.4],
+    bias: 2
+}
 
 graph = topological_sort(feed_dict)
 output = forward_pass(f, graph)
 
-# should output 19
-print("{} + {} + {} = {} (according to miniflow)".format(feed_dict[x], feed_dict[y], feed_dict[z], output))
+print(output) # should be 12.7 with this example

@@ -1,123 +1,105 @@
 """
-Bonus Challenge!
-
-Write your code in Add (scroll down).
+Write the Linear#forward method below!
 """
+import numpy as np
 
-class Neuron:
-    def __init__(self, inbound_neurons=[], label=''):
-        # An optional description of the neuron - most useful for outputs.
-        self.label = label
-        # Neurons from which this Node receives values
-        self.inbound_neurons = inbound_neurons
-        # Neurons to which this Node passes values
-        self.outbound_neurons = []
+class Node:
+    def __init__(self, inbound_nodes=[]):
+        # Nodes from which this Node receives values
+        self.inbound_nodes = inbound_nodes
+        # Nodes to which this Node passes values
+        self.outbound_nodes = []
         # A calculated value
         self.value = None
         # Add this node as an outbound node on its inputs.
-        for n in self.inbound_neurons:
-            n.outbound_neurons.append(self)
-
+        for n in self.inbound_nodes:
+            n.outbound_nodes.append(self)
 
     # These will be implemented in a subclass.
     def forward(self):
         """
         Forward propagation.
 
-        Compute the output value based on `inbound_neurons` and
+        Compute the output value based on `inbound_nodes` and
         store the result in self.value.
         """
         raise NotImplemented
 
-    def backward(self):
-        """
-        Backward propagation.
 
-        Compute the gradient of the current Neuron with respect
-        to the input neurons. The gradient of the loss with respect
-        to the current Neuron should already be computed in the `gradients`
-        attribute of the output neurons.
-        """
-        raise NotImplemented
-
-class Input(Neuron):
+class Input(Node):
     def __init__(self):
-        # An Input Neuron has no inbound neurons,
-        # so no need to pass anything to the Neuron instantiator
-        Neuron.__init__(self)
+        # An Input Node has no inbound nodes,
+        # so no need to pass anything to the Node instantiator
+        Node.__init__(self)
 
-    # NOTE: Input Neuron is the only Neuron where the value
-    # may be passed as an argument to forward().
-    #
-    # All other Neuron implementations should get the value
-    # of the previous neurons from self.inbound_neurons
-    #
-    # Example:
-    # val0 = self.inbound_neurons[0].value
+        # NOTE: Input Node is the only Node where the value
+        # may be passed as an argument to forward().
+        #
+        # All other Node implementations should get the value
+        # of the previous nodes from self.inbound_nodes
+        #
+        # Example:
+        # val0 = self.inbound_nodes[0].value
     def forward(self, value=None):
         # Overwrite the value if one is passed in.
         if value is not None:
             self.value = value
 
-    def backward(self):
-        # An Input Neuron has no inputs so we refer to ourself
-        # for the gradient
-        self.gradients = {self: 0}
-        for n in self.outbound_neurons:
-            self.gradients[self] += n.gradients[self]
 
+class Linear(Node):
+    def __init__(self, inputs, weights, bias):
+        Node.__init__(self, [inputs, weights, bias])
 
-"""
-Can you augment the Add class so that it accepts
-any number of neurons as input?
+        # NOTE: The weights and bias properties here are not
+        # numbers, but rather references to other nodes.
+        # The weight and bias values are stored within the
+        # respective nodes.
 
-Hint: this may be useful:
-https://docs.python.org/3/tutorial/controlflow.html#unpacking-argument-lists
-"""
-class Add(Neuron):
-    # You may need to change this...
-    def __init__(self, *inputs):
-        Neuron.__init__(self, inputs)
+    # feed_dict = {x: 4, y: 5, z: 10}
+
+    # self.value = 0;
+    # for singleValue in self.inbound_neurons:
+    #     self.value += singleValue.value
 
     def forward(self):
         """
-        For reference, here's the old way from the last
-        quiz. You'll want to write code here.
+        Set self.value to the value of the linear function output.
+
+        Your code goes here!
         """
-        # x_value = self.inbound_neurons[0].value
-        # y_value = self.inbound_neurons[1].value
-        # self.value = x_value + y_value
-        self.value = 0;
-        for singleValue in self.inbound_neurons:
-            self.value += singleValue.value
+        inputs = np.array(self.inbound_nodes[0].value)
+        weights = np.array(self.inbound_nodes[1].value)
+        bias  = self.inbound_nodes[2].value
+        self.value = bias
+        self.value += inputs.dot(weights)
 
 
 def topological_sort(feed_dict):
     """
-    Sort the neurons in topological order using Kahn's Algorithm.
+    Sort the nodes in topological order using Kahn's Algorithm.
 
-    `feed_dict`: A dictionary where the key is a `Input` Neuron and the value is the respective value feed to that Neuron.
+    `feed_dict`: A dictionary where the key is a `Input` Node and the value is the respective value feed to that Node.
 
-    Returns a list of sorted neurons.
+    Returns a list of sorted nodes.
     """
 
-    input_neurons = [n for n in feed_dict.keys()]
+    input_nodes = [n for n in feed_dict.keys()]
 
     G = {}
-    neurons = [n for n in input_neurons]
-    while len(neurons) > 0:
-        n = neurons.pop(0)
+    nodes = [n for n in input_nodes]
+    while len(nodes) > 0:
+        n = nodes.pop(0)
         if n not in G:
             G[n] = {'in': set(), 'out': set()}
-        for m in n.outbound_neurons:
+        for m in n.outbound_nodes:
             if m not in G:
                 G[m] = {'in': set(), 'out': set()}
             G[n]['out'].add(m)
             G[m]['in'].add(n)
-            neurons.append(m)
+            nodes.append(m)
 
     L = []
-    S = set(input_neurons)
+    S = set(input_nodes)
     while len(S) > 0:
         n = S.pop()
 
@@ -125,7 +107,7 @@ def topological_sort(feed_dict):
             n.value = feed_dict[n]
 
         L.append(n)
-        for m in n.outbound_neurons:
+        for m in n.outbound_nodes:
             G[n]['out'].remove(m)
             G[m]['in'].remove(n)
             # if no other incoming edges add to S
@@ -134,19 +116,19 @@ def topological_sort(feed_dict):
     return L
 
 
-def forward_pass(output_Neuron, sorted_neurons):
+def forward_pass(output_node, sorted_nodes):
     """
-    Performs a forward pass through a list of sorted neurons.
+    Performs a forward pass through a list of sorted nodes.
 
     Arguments:
 
-        `output_Neuron`: A Neuron in the graph, should be the output Neuron (have no outgoing edges).
-        `sorted_neurons`: a topologically sorted list of neurons.
+        `output_node`: A node in the graph, should be the output node (have no outgoing edges).
+        `sorted_nodes`: A topologically sorted list of nodes.
 
-    Returns the output Neuron's value
+    Returns the output Node's value
     """
 
-    for n in sorted_neurons:
+    for n in sorted_nodes:
         n.forward()
 
-    return output_Neuron.value
+    return output_node.value
