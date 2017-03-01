@@ -1,3 +1,0 @@
-model_checkpoint_path: "data.ckpt"
-all_model_checkpoint_paths: "..\\lenet"
-all_model_checkpoint_paths: "data.ckpt"
